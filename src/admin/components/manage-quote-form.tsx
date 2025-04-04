@@ -3,7 +3,7 @@ import { Button, Heading, toast } from "@medusajs/ui";
 import { useConfirmQuote } from "../hooks/quotes";
 import { formatAmount } from "../utils/format-amount";
 import { useOrderPreview } from "../hooks/order-preview";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { useMemo } from "react";
 import { ManageItem } from "./manage-item";
 
@@ -13,8 +13,7 @@ type ReturnCreateFormProps = {
 
 export const ManageQuoteForm = ({ order }: ReturnCreateFormProps) => {
   const { order: preview } = useOrderPreview(order.id);
-  const navigate = useNavigate()
-  const { id: quoteId } = useParams()
+  const navigate = useNavigate();
 
   const { mutateAsync: confirmQuote, isPending: isRequesting } =
     useConfirmQuote(order.id);
@@ -23,7 +22,7 @@ export const ManageQuoteForm = ({ order }: ReturnCreateFormProps) => {
     e.preventDefault();
     try {
       await confirmQuote();
-      navigate(`/quotes/${quoteId}`);
+      navigate(`/quotes`);
 
       toast.success("Successfully updated quote");
     } catch (e) {
@@ -32,10 +31,10 @@ export const ManageQuoteForm = ({ order }: ReturnCreateFormProps) => {
       });
     }
   };
-  
-    const originalItemsMap = useMemo(() => {
-      return new Map(order.items.map((item) => [item.id, item]));
-    }, [order]);
+
+  const originalItemsMap = useMemo(() => {
+    return new Map(order.items.map((item) => [item.id, item]));
+  }, [order]);
 
   if (!preview) {
     return <></>;
@@ -61,9 +60,7 @@ export const ManageQuoteForm = ({ order }: ReturnCreateFormProps) => {
 
       <div className="mt-8 border-y border-dotted py-4">
         <div className="mb-2 flex items-center justify-between">
-          <span className="txt-small text-ui-fg-subtle">
-            Current Total
-          </span>
+          <span className="txt-small text-ui-fg-subtle">Current Total</span>
 
           <span className="txt-small text-ui-fg-subtle">
             {formatAmount(order.total, order.currency_code)}
@@ -71,9 +68,7 @@ export const ManageQuoteForm = ({ order }: ReturnCreateFormProps) => {
         </div>
 
         <div className="mb-2 flex items-center justify-between">
-          <span className="txt-small text-ui-fg-subtle">
-            New Total
-          </span>
+          <span className="txt-small text-ui-fg-subtle">New Total</span>
 
           <span className="txt-small text-ui-fg-subtle">
             {formatAmount(preview.total, order.currency_code)}

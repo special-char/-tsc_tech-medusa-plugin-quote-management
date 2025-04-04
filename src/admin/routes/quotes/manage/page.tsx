@@ -1,13 +1,13 @@
-import { useParams } from "react-router-dom";
-import { useQuote } from "../../../../hooks/quotes";
-import { Container, Heading, Toaster } from "@medusajs/ui"
-import { ManageQuoteForm } from "../../../../components/manage-quote-form";
+import { useLocation, useParams } from "react-router-dom";
+import { Container, Heading, Toaster } from "@medusajs/ui";
+import { ManageQuoteForm } from "../../../components/manage-quote-form";
+import { useQuote } from "../../../hooks/quotes";
 
 const QuoteManage = () => {
-  const { id } = useParams();
+  const { state } = useLocation();
+  const { id } = state;
   const { quote, isLoading } = useQuote(id!, {
-    fields:
-      "*draft_order.customer",
+    fields: "*draft_order.customer",
   });
 
   if (isLoading) {
