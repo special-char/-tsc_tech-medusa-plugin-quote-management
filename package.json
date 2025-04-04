@@ -1,5 +1,5 @@
 {
-  "name": "quotes",
+  "name": "@tsc_tech/medusa-plugin-quotes",
   "version": "0.0.1",
   "description": "A starter for Medusa plugins.",
   "author": "Medusa (https://medusajs.com)",
