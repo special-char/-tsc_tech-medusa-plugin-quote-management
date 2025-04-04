@@ -1,65 +1,142 @@
-<p align="center">
-  <a href="https://www.medusajs.com">
-  <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="https://user-images.githubusercontent.com/59018053/229103275-b5e482bb-4601-46e6-8142-244f531cebdb.svg">
-    <source media="(prefers-color-scheme: light)" srcset="https://user-images.githubusercontent.com/59018053/229103726-e5b529a3-9b3f-4970-8a1f-c6af37f087bf.svg">
-    <img alt="Medusa logo" src="https://user-images.githubusercontent.com/59018053/229103726-e5b529a3-9b3f-4970-8a1f-c6af37f087bf.svg">
-    </picture>
-  </a>
-</p>
-<h1 align="center">
-  Medusa Plugin Starter
-</h1>
+# Quote Management System
 
-<h4 align="center">
-  <a href="https://docs.medusajs.com">Documentation</a> |
-  <a href="https://www.medusajs.com">Website</a>
-</h4>
+This project includes a comprehensive quote management system that handles various aspects of quoting, such as cart quotes, customer quotes, order changes, and order quotes.
 
-<p align="center">
-  Building blocks for digital commerce
-</p>
-<p align="center">
-  <a href="https://github.com/medusajs/medusa/blob/master/CONTRIBUTING.md">
-    <img src="https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=flat" alt="PRs welcome!" />
-  </a>
-    <a href="https://www.producthunt.com/posts/medusa"><img src="https://img.shields.io/badge/Product%20Hunt-%231%20Product%20of%20the%20Day-%23DA552E" alt="Product Hunt"></a>
-  <a href="https://discord.gg/xpCwq3Kfn8">
-    <img src="https://img.shields.io/badge/chat-on%20discord-7289DA.svg" alt="Discord Chat" />
-  </a>
-  <a href="https://twitter.com/intent/follow?screen_name=medusajs">
-    <img src="https://img.shields.io/twitter/follow/medusajs.svg?label=Follow%20@medusajs" alt="Follow @medusajs" />
-  </a>
-</p>
+## Features
 
-## Compatibility
+1. **Cart Quotes**
 
-This starter is compatible with versions >= 2.4.0 of `@medusajs/medusa`. 
+   - Handles the creation and management of quotes associated with shopping carts.
+   - Includes logic for calculating discounts, taxes, and total amounts.
 
-## Getting Started
+2. **Customer Quotes**
 
-Visit the [Quickstart Guide](https://docs.medusajs.com/learn/installation) to set up a server.
+   - Manages quotes specific to individual customers.
+   - Supports personalized pricing and customer-specific terms.
 
-Visit the [Plugins documentation](https://docs.medusajs.com/learn/fundamentals/plugins) to learn more about plugins and how to create them.
+3. **Order Change Quotes**
 
-Visit the [Docs](https://docs.medusajs.com/learn/installation#get-started) to learn more about our system requirements.
+   - Facilitates quotes for changes to existing orders.
+   - Ensures accurate recalculations for modifications.
 
-## What is Medusa
+4. **Order Quotes**
 
-Medusa is a set of commerce modules and tools that allow you to build rich, reliable, and performant commerce applications without reinventing core commerce logic. The modules can be customized and used to build advanced ecommerce stores, marketplaces, or any product that needs foundational commerce primitives. All modules are open-source and freely available on npm.
+   - Generates quotes for finalized orders.
+   - Includes support for order-specific adjustments and promotions.
 
-Learn more about [Medusa’s architecture](https://docs.medusajs.com/learn/introduction/architecture) and [commerce modules](https://docs.medusajs.com/learn/fundamentals/modules/commerce-modules) in the Docs.
+5. **Quote Modules**
+   - Contains reusable modules and utilities for quote management.
+   - Provides a centralized location for shared quote-related logic.
 
-## Community & Contributions
+## How It Works
 
-The community and core team are available in [GitHub Discussions](https://github.com/medusajs/medusa/discussions), where you can ask for support, discuss roadmap, and share ideas.
+1. **Initialization**: Quotes are initialized based on the context (cart, customer, or order).
+2. **Calculation**: The system calculates the quote details, including pricing, discounts, and taxes.
+3. **Validation**: Ensures all required fields are populated and the quote meets business rules.
+4. **Finalization**: Once approved, the quote is converted into an order or saved for future reference.
 
-Join our [Discord server](https://discord.com/invite/medusajs) to meet other community members.
+---
 
-## Other channels
+## API Documentation
 
-- [GitHub Issues](https://github.com/medusajs/medusa/issues)
-- [Twitter](https://twitter.com/medusajs)
-- [LinkedIn](https://www.linkedin.com/company/medusajs)
-- [Medusa Blog](https://medusajs.com/blog/)
-# -tsc_tech-medusa-plugin-quote-management
+### 1. Preview Quote
+
+**Endpoint**: `GET /store/customers/me/quotes/{{quoteId}}/preview`
+
+```bash
+curl -X GET "{{backend_url}}/store/customers/me/quotes/{{quoteId}}/preview" \
+-H "Authorization: Bearer {{token}}" \
+-H "x-publishable-api-key: {{x-publishable-api-key}}"
+```
+
+### 2. Customer Accept Quote
+
+**Endpoint**: `POST /store/customers/me/quotes/{{quoteId}}/accept`
+
+```bash
+curl -X POST "{{backend_url}}/store/customers/me/quotes/{{quoteId}}/accept" \
+-H "Authorization: Bearer {{token}}" \
+-H "x-publishable-api-key: {{x-publishable-api-key}}"
+```
+
+### 3. Create Request for Quote
+
+**Endpoint**: `POST /store/customers/quotes`
+
+```bash
+curl -X POST "{{backend_url}}/store/customers/quotes" \
+-H "Authorization: Bearer {{token}}" \
+-H "x-publishable-api-key: {{x-publishable-api-key}}" \
+-H "Content-Type: application/json" \
+-d '{
+  "region_id": "reg_01JQ950RWSF4HPHKQHB4FMB1EM",
+  "first_name": "fn",
+  "last_name": "ln",
+  "quantity": 5,
+  "email": "testquote111@yopmail.com",
+  "variant_id": "variant_01JQ950S0R2YJ8WN7KJ6K0YZA7"
+}'
+```
+
+### 4. Get Customer Quotes
+
+**Endpoint**: `GET /store/customers/me/quotes`
+
+```bash
+curl -X GET "{{backend_url}}/store/customers/me/quotes" \
+-H "Authorization: Bearer {{token}}" \
+-H "x-publishable-api-key: {{x-publishable-api-key}}"
+```
+
+### 5. Customer Reject Quote
+
+**Endpoint**: `POST /store/customers/me/quotes/{{quoteId}}/reject`
+
+```bash
+curl -X POST "{{backend_url}}/store/customers/me/quotes/{{quoteId}}/reject" \
+-H "Authorization: Bearer {{token}}" \
+-H "x-publishable-api-key: {{x-publishable-api-key}}"
+```
+
+### 6. Admin Get All Quotes
+
+**Endpoint**: `GET /admin/quotes`
+
+```bash
+curl -X GET "{{backend_url}}/admin/quotes" \
+-H "Authorization: Bearer {{adminAuth}}"
+```
+
+### 8. Admin Reject Quote
+
+**Endpoint**: `POST /admin/quotes/{{quoteId}}/reject`
+
+```bash
+curl -X POST "{{backend_url}}/admin/quotes/{{quoteId}}/reject" \
+-H "Authorization: Bearer {{adminAuth}}"
+```
+
+### 9. Admin Create Quote
+
+**Endpoint**: `POST /admin/quotes`
+
+```bash
+curl -X POST "{{backend_url}}/admin/quotes" \
+-H "Authorization: Bearer {{adminAuth}}" \
+-H "Content-Type: application/json" \
+-d '{
+  "customer_id": "cus_01JQNBNXTHYW6KNH2GX85YQGVZ",
+  "region_id": "reg_01JQN8EF6A9SPHZ0E33EAD9ASW",
+  "variant_id": "variant_01JQN8EFBEKQ25BS7QW71X5BBF",
+  "quantity": 5
+}'
+```
+
+### 10. Admin Send Quote
+
+**Endpoint**: `POST /admin/quotes/{{quoteId}}/send`
+
+```bash
+curl -X POST "{{backend_url}}/admin/quotes/{{quoteId}}/send" \
+-H "Authorization: Bearer {{adminAuth}}"
+```
