@@ -3,6 +3,7 @@ import { ContainerRegistrationKeys } from "@medusajs/framework/utils";
 import { CreateQuoteType } from "./validators";
 import { createCartWorkflow } from "@medusajs/medusa/core-flows";
 import { createRequestForQuoteWorkflow } from "../../../workflows/create-request-for-quote";
+import { merchantUpdateQuoteWorkflow } from "../../../workflows/update-quote";
 
 export const GET = async (req: MedusaRequest, res: MedusaResponse) => {
   const query = req.scope.resolve(ContainerRegistrationKeys.QUERY);
@@ -25,7 +26,7 @@ export const POST = async (
   res: MedusaResponse
 ) => {
   const query = req.scope.resolve(ContainerRegistrationKeys.QUERY);
-  //
+
   console.log("cart_id");
   //create cart
   const cart = await createCartWorkflow(req.scope).run({
@@ -50,16 +51,20 @@ export const POST = async (
       cart_id,
     },
   });
+  await merchantUpdateQuoteWorkflow(req.scope).run({
+    input: {
+      quote_id: createdQuote.id,
+      valid_till: new Date(req.body.valid_till),
+    },
+  });
 
   const { data: quotes, metadata } = await query.graph({
     entity: "quotes",
+    filters: { id: createdQuote.id },
     ...req.queryConfig,
   });
 
   res.json({
     quotes,
-    count: metadata!.count,
-    offset: metadata!.skip,
-    limit: metadata!.take,
   });
 };

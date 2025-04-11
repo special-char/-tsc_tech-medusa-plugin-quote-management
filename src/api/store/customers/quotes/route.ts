@@ -18,26 +18,41 @@ export const POST = async (
   res: MedusaResponse
 ) => {
   let customer_id = (req as AuthenticatedMedusaRequest).auth_context?.actor_id;
+  const query = req.scope.resolve(ContainerRegistrationKeys.QUERY);
   if (!customer_id) {
     console.log("customer");
-
-    //create customer
-    const createdCustomers = await createCustomersWorkflow(req.scope).run({
-      input: {
-        customersData: [
-          {
-            first_name: req.body.first_name,
-            last_name: req.body.last_name,
-            email: req.body.email,
-          },
-        ],
+    //first check if customer already exists
+    const { data: customer } = await query.graph<any>({
+      entity: "customer",
+      fields: ["id", "first_name", "last_name", "email", "has_account"],
+      filters: {
+        email: req.body.email,
       },
     });
-    customer_id = createdCustomers.result[0].id;
-    //TODO: customer invite
-    // if (!createdCustomers.result[0].has_account) {
-    //   customerInviteFuncion({ ids: [createdCustomers.result[0].id] });
-    // }
+
+    if (customer && customer.length > 0 && customer[0].id) {
+      customer_id = customer[0].id;
+    }
+
+    //create customer
+    if (!customer_id) {
+      const createdCustomers = await createCustomersWorkflow(req.scope).run({
+        input: {
+          customersData: [
+            {
+              first_name: req.body.first_name,
+              last_name: req.body.last_name,
+              email: req.body.email,
+            },
+          ],
+        },
+      });
+      customer_id = createdCustomers.result[0].id;
+      //TODO: customer invite
+      // if (!createdCustomers.result[0].has_account) {
+      //   customerInviteFuncion({ ids: [createdCustomers.result[0].id] });
+      // }
+    }
   }
   let cart_id = req.body.cart_id;
   if (!cart_id) {
@@ -66,8 +81,6 @@ export const POST = async (
       customer_id: customer_id,
     },
   });
-
-  const query = req.scope.resolve(ContainerRegistrationKeys.QUERY);
 
   const {
     data: [quote],

@@ -3,19 +3,20 @@ import type {
   MedusaResponse,
 } from "@medusajs/framework/http";
 import { ContainerRegistrationKeys } from "@medusajs/framework/utils";
-import { merchantSendQuoteWorkflow } from "../../../../../workflows/merchant-send-quote";
+import { CreateQuoteUpdateType } from "../../validators";
+import { merchantUpdateQuoteWorkflow } from "../../../../../workflows/update-quote";
 
 export const POST = async (
-  req: AuthenticatedMedusaRequest,
+  req: AuthenticatedMedusaRequest<CreateQuoteUpdateType>,
   res: MedusaResponse
 ) => {
   const query = req.scope.resolve(ContainerRegistrationKeys.QUERY);
   const { id } = req.params;
 
-  await merchantSendQuoteWorkflow(req.scope).run({
+  await merchantUpdateQuoteWorkflow(req.scope).run({
     input: {
       quote_id: id,
-      customer_id: req.auth_context.actor_id,
+      valid_till: new Date(req.body.valid_till),
     },
   });
 

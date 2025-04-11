@@ -25,7 +25,7 @@ const QuoteManage = () => {
           Manage Quote
         </Heading>
 
-        <ManageQuoteForm order={quote.draft_order} />
+        <ManageQuoteForm order={quote.draft_order} quote={quote} />
       </Container>
       <Toaster />
     </>

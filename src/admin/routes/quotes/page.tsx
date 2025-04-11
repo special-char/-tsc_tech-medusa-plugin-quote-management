@@ -1,6 +1,7 @@
 import { defineRouteConfig } from "@medusajs/admin-sdk";
-import { DocumentText } from "@medusajs/icons";
+import { DocumentText, Link } from "@medusajs/icons";
 import {
+  Button,
   Container,
   createDataTableColumnHelper,
   DataTable,
@@ -16,10 +17,8 @@ import { AdminQuote } from "../../types";
 
 const StatusTitles: Record<string, string> = {
   accepted: "Accepted",
-  customer_rejected: "Customer Rejected",
-  merchant_rejected: "Merchant Rejected",
-  pending_merchant: "Pending Merchant",
-  pending_customer: "Pending Customer",
+  rejected: "Rejected",
+  pending: "Pending",
 };
 
 const columnHelper = createDataTableColumnHelper<AdminQuote>();
@@ -91,10 +90,18 @@ const Quotes = () => {
   return (
     <>
       <Container className="flex flex-col p-0 overflow-hidden">
-        <Heading className="p-6 pb-0 font-sans font-medium h1-core">
-          Quotes
-        </Heading>
-
+        <div className="flex items-center justify-between px-6 py-4">
+          <Heading level="h2">Quotes</Heading>
+          <Button size="small" variant="secondary" asChild>
+            <Button
+              size="small"
+              variant="secondary"
+              onClick={() => navigate("/quotes/create")}
+            >
+              Create
+            </Button>
+          </Button>
+        </div>
         <DataTable instance={table}>
           <DataTable.Toolbar>
             <Heading>Products</Heading>
