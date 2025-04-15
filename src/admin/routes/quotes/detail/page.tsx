@@ -1,6 +1,7 @@
-import { CheckCircleSolid } from "@medusajs/icons";
+import { CheckCircleSolid, TriangleDownMini } from "@medusajs/icons";
 import {
   Button,
+  clx,
   Container,
   Heading,
   Text,
@@ -8,13 +9,14 @@ import {
   Toaster,
   usePrompt,
 } from "@medusajs/ui";
-import { useEffect, useState } from "react";
+import { ReactNode, useEffect, useMemo, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useOrderPreview } from "../../../hooks/order-preview";
 import { useQuote, useRejectQuote, useSendQuote } from "../../../hooks/quotes";
 import { QuoteItems } from "../../../components/quote-items";
-import { TotalsBreakdown } from "../../../components/totals-breakdown";
 import { formatAmount } from "../../../utils/format-amount";
+import ShippingInfoPopover from "../../../components/shipping-info-popover";
+import { AdminOrder, AdminRegion } from "@medusajs/framework/types";
 
 const QuoteDetails = () => {
   const { state } = useLocation();
@@ -43,27 +45,19 @@ const QuoteDetails = () => {
   const [showManageQuote, setShowManageQuote] = useState(false);
 
   useEffect(() => {
-    if (["pending_merchant", "customer_rejected"].includes(quote?.status!)) {
+    if (["pending"].includes(quote?.status!)) {
       setShowSendQuote(true);
     } else {
       setShowSendQuote(false);
     }
 
-    if (
-      ["customer_rejected", "merchant_rejected", "accepted"].includes(
-        quote?.status!
-      )
-    ) {
+    if (!["pending"].includes(quote?.status!)) {
       setShowRejectQuote(false);
     } else {
       setShowRejectQuote(true);
     }
 
-    if (
-      !["pending_merchant", "customer_rejected", "merchant_rejected"].includes(
-        quote?.status!
-      )
-    ) {
+    if (!["pending"].includes(quote?.status!)) {
       setShowManageQuote(false);
     } else {
       setShowManageQuote(true);
@@ -123,23 +117,24 @@ const QuoteDetails = () => {
     <div className="flex flex-col gap-y-3">
       <div className="flex flex-col gap-x-4 lg:flex-row xl:items-start">
         <div className="flex w-full flex-col gap-y-3">
-          {quote.status === "accepted" && (
-            <Container className="divide-y divide-dashed p-0">
-              <div className="flex items-center justify-between px-6 py-4">
-                <Text className="txt-compact-small">
-                  <CheckCircleSolid className="inline-block mr-2 text-green-500 text-lg" />
-                  Quote accepted by customer. Order is ready for processing.
-                </Text>
+          {quote.status === "accepted" &&
+            quote.payment_status === "captured" && (
+              <Container className="divide-y divide-dashed p-0">
+                <div className="flex items-center justify-between px-6 py-4">
+                  <Text className="txt-compact-small">
+                    <CheckCircleSolid className="inline-block mr-2 text-green-500 text-lg" />
+                    Quote accepted by customer. Order is ready for processing.
+                  </Text>
 
-                <Button
-                  size="small"
-                  onClick={() => navigate(`/orders/${quote.draft_order_id}`)}
-                >
-                  View Order
-                </Button>
-              </div>
-            </Container>
-          )}
+                  <Button
+                    size="small"
+                    onClick={() => navigate(`/orders/${quote.draft_order_id}`)}
+                  >
+                    View Order
+                  </Button>
+                </div>
+              </Container>
+            )}
 
           <Container className="divide-y divide-dashed p-0">
             <div className="flex items-center justify-between px-6 py-4">
@@ -149,7 +144,9 @@ const QuoteDetails = () => {
               </span>
             </div>
             <QuoteItems order={quote.draft_order} preview={preview!} />
-            <TotalsBreakdown order={quote.draft_order} />
+            {/* <TotalsBreakdown order={quote.draft_order} /> */}
+            <CostBreakdown order={quote.draft_order} preview={preview!} />
+
             <div className=" flex flex-col gap-y-2 px-6 py-4">
               <div className="text-ui-fg-base flex items-center justify-between">
                 <Text
@@ -262,6 +259,172 @@ const QuoteDetails = () => {
       </div>
 
       <Toaster />
+    </div>
+  );
+};
+const Cost = ({
+  label,
+  value,
+  secondaryValue,
+  tooltip,
+}: {
+  label: ReactNode;
+  value: string | number;
+  secondaryValue?: string;
+  tooltip?: ReactNode;
+}) => (
+  <div className="grid grid-cols-3 items-center">
+    <Text size="small" leading="compact">
+      {label} {tooltip}
+    </Text>
+    <div className="text-right">
+      <Text size="small" leading="compact">
+        {secondaryValue}
+      </Text>
+    </div>
+    <div className="text-right">
+      <Text size="small" leading="compact">
+        {value}
+      </Text>
+    </div>
+  </div>
+);
+
+const CostBreakdown = ({
+  order,
+  preview,
+}: {
+  order: AdminOrder & { region?: AdminRegion | null };
+  preview: AdminOrder & { region?: AdminRegion | null };
+}) => {
+  const [isTaxOpen, setIsTaxOpen] = useState(false);
+  const [isShippingOpen, setIsShippingOpen] = useState(false);
+
+  const discountCodes = useMemo(() => {
+    const codes = new Set();
+    order.items.forEach((item: any) =>
+      item.adjustments?.forEach((adj: any) => {
+        codes.add(adj.code);
+      })
+    );
+
+    return Array.from(codes).sort();
+  }, [order]);
+
+  const taxCodes = useMemo(() => {
+    const taxCodeMap = {};
+
+    return taxCodeMap;
+  }, [order]);
+
+  const automaticTaxesOn = !!order.region?.automatic_taxes;
+  const hasTaxLines = !!Object.keys(taxCodes).length;
+
+  const discountTotal = order.discount_total;
+
+  return (
+    <div className="text-ui-fg-subtle flex flex-col gap-y-2 px-6 py-4">
+      <Cost
+        label={automaticTaxesOn ? "Item Total" : "Item Subtotal"}
+        value={formatAmount(preview.item_subtotal, order.currency_code)}
+      />
+
+      {isShippingOpen && (
+        <div className="flex flex-col gap-1 pl-5">
+          {(order.shipping_methods || [])
+            .sort((m1: any, m2: any) =>
+              (m1.created_at as string).localeCompare(m2.created_at as string)
+            )
+            .map((sm: any, i: any) => {
+              return (
+                <div
+                  key={sm.id}
+                  className="flex items-center justify-between gap-x-2"
+                >
+                  <div>
+                    <span className="txt-small text-ui-fg-subtle font-medium">
+                      {sm.name}
+                      {sm.detail.return_id &&
+                        ` (${"fields.returnShipping"})`}{" "}
+                      <ShippingInfoPopover key={i} shippingMethod={sm} />
+                    </span>
+                  </div>
+                  <div className="relative flex-1">
+                    <div className="bottom-[calc(50% - 2px)] absolute h-[1px] w-full border-b border-dashed" />
+                  </div>
+                  <span className="txt-small text-ui-fg-muted">
+                    {formatAmount(
+                      automaticTaxesOn ? sm.total : sm.subtotal,
+                      order.currency_code
+                    )}
+                  </span>
+                </div>
+              );
+            })}
+        </div>
+      )}
+
+      <Cost
+        label={automaticTaxesOn ? "Discount Total" : "Discount Subtotal"}
+        secondaryValue={discountCodes.join(", ")}
+        value={
+          discountTotal > 0
+            ? `- ${formatAmount(discountTotal, order.currency_code)}`
+            : "-"
+        }
+      />
+
+      <>
+        <div className="flex justify-between">
+          <div
+            onClick={() => hasTaxLines && setIsTaxOpen((o) => !o)}
+            className={clx("flex items-center gap-1", {
+              "cursor-pointer": hasTaxLines,
+            })}
+          >
+            <span className="txt-small select-none">
+              {automaticTaxesOn ? "Tax Total Incl" : "Tax Total"}
+            </span>
+            {hasTaxLines && (
+              <TriangleDownMini
+                style={{
+                  transform: `rotate(${isTaxOpen ? 0 : -90}deg)`,
+                }}
+              />
+            )}
+          </div>
+
+          <div className="text-right">
+            <Text size="small" leading="compact">
+              {formatAmount(order.tax_total, order.currency_code)}
+            </Text>
+          </div>
+        </div>
+        {isTaxOpen && (
+          <div className="flex flex-col gap-1 pl-5">
+            {Object.entries(taxCodes).map(([code, total]) => {
+              return (
+                <div
+                  key={code}
+                  className="flex items-center justify-between gap-x-2"
+                >
+                  <div>
+                    <span className="txt-small text-ui-fg-subtle font-medium">
+                      {code}
+                    </span>
+                  </div>
+                  <div className="relative flex-1">
+                    <div className="bottom-[calc(50% - 2px)] absolute h-[1px] w-full border-b border-dashed" />
+                  </div>
+                  <span className="txt-small text-ui-fg-muted">
+                    {formatAmount(Number(total), order.currency_code)}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </>
     </div>
   );
 };

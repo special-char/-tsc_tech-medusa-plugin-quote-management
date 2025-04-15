@@ -3,11 +3,10 @@ import QuoteModuleService from "./service";
 
 export const QUOTE_MODULE = "quote";
 export enum QuoteStatus {
-  PENDING_MERCHANT = "pending_merchant",
-  PENDING_CUSTOMER = "pending_customer",
+  PENDING = "pending",
   ACCEPTED = "accepted",
-  CUSTOMER_REJECTED = "customer_rejected",
-  MERCHANT_REJECTED = "merchant_rejected",
+  REJECTED = "rejected",
+  EXPIRED = "expired",
 }
 export default Module(QUOTE_MODULE, {
   service: QuoteModuleService,

@@ -29,7 +29,7 @@ export const merchantRejectQuoteWorkflow = createWorkflow(
     updateQuotesStep([
       {
         id: input.quote_id,
-        status: QuoteStatus.MERCHANT_REJECTED,
+        status: QuoteStatus.REJECTED,
       },
     ]);
   }

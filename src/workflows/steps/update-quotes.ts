@@ -5,6 +5,7 @@ import QuoteModuleService from "../../modules/quotes/service";
 type StepInput = {
   id: string;
   status?: QuoteStatus;
+  valid_till?: Date;
 }[];
 
 export const updateQuotesStep = createStep(

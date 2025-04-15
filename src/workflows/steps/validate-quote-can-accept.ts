@@ -11,7 +11,7 @@ type StepInput = {
 export const validateQuoteCanAcceptStep = createStep(
   "validate-quote-can-accept",
   async function ({ quote }: StepInput) {
-    if (quote.status !== QuoteStatus.PENDING_CUSTOMER) {
+    if (quote.status !== QuoteStatus.PENDING) {
       throw new MedusaError(
         MedusaError.Types.INVALID_DATA,
         `Cannot accept quote when quote status is ${quote.status}`

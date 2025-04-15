@@ -7,9 +7,15 @@ import { CreateQuote, GetQuoteParams } from "./store/validators";
 import { listAdminQuoteQueryConfig } from "./admin/quotes/query-config";
 import {
   AdminCreateQuote,
+  AdminCreateUpdateQuote,
   AdminGetQuoteParams,
 } from "./admin/quotes/validators";
 import { listStoreQuoteQueryConfig } from "./store/customers/me/quotes/query-config";
+import {
+  AdminGetProductVariantsParams,
+  setPricingContext,
+} from "./admin/product-variant/validators";
+import { listProductVariantQueryConfig } from "./admin/product-variant/query-config";
 
 export default defineMiddlewares({
   routes: [
@@ -45,6 +51,29 @@ export default defineMiddlewares({
           AdminGetQuoteParams,
           listAdminQuoteQueryConfig
         ),
+      ],
+    },
+    {
+      matcher: "/admin/quotes/:id/update",
+      method: ["POST"],
+      middlewares: [
+        validateAndTransformBody(AdminCreateUpdateQuote),
+        validateAndTransformQuery(
+          AdminGetQuoteParams,
+          listAdminQuoteQueryConfig
+        ),
+      ],
+    },
+
+    {
+      matcher: "/admin/product-variant",
+      method: "GET",
+      middlewares: [
+        validateAndTransformQuery(
+          AdminGetProductVariantsParams,
+          listProductVariantQueryConfig
+        ),
+        setPricingContext(),
       ],
     },
   ],

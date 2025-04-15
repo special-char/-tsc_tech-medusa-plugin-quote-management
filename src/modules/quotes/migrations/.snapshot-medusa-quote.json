@@ -22,13 +22,12 @@
           "autoincrement": false,
           "primary": false,
           "nullable": false,
-          "default": "'pending_merchant'",
+          "default": "'pending'",
           "enumItems": [
-            "pending_merchant",
-            "pending_customer",
+            "pending",
             "accepted",
-            "customer_rejected",
-            "merchant_rejected"
+            "rejected",
+            "expired"
           ],
           "mappedType": "enum"
         },
@@ -66,6 +65,25 @@
           "autoincrement": false,
           "primary": false,
           "nullable": false,
+          "mappedType": "text"
+        },
+        "valid_till": {
+          "name": "valid_till",
+          "type": "timestamptz",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "length": 6,
+          "mappedType": "datetime"
+        },
+        "notes": {
+          "name": "notes",
+          "type": "text",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
           "mappedType": "text"
         },
         "created_at": {

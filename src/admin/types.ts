@@ -9,6 +9,8 @@ import {
 export type AdminQuote = {
   id: string;
   status: string;
+  payment_status: string;
+  valid_till: string;
   draft_order_id: string;
   order_change_id: string;
   cart_id: string;

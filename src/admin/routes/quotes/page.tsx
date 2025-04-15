@@ -1,6 +1,7 @@
 import { defineRouteConfig } from "@medusajs/admin-sdk";
-import { DocumentText } from "@medusajs/icons";
+import { DocumentText, Link } from "@medusajs/icons";
 import {
+  Button,
   Container,
   createDataTableColumnHelper,
   DataTable,
@@ -13,13 +14,13 @@ import { useNavigate } from "react-router-dom";
 import { useQuotes } from "../../hooks/quotes";
 import { useState } from "react";
 import { AdminQuote } from "../../types";
+import { QuoteStatusCell } from "../../components/quote-status";
+import { QuoteStatus } from "../../utils/quote-status-helper";
 
 const StatusTitles: Record<string, string> = {
   accepted: "Accepted",
-  customer_rejected: "Customer Rejected",
-  merchant_rejected: "Merchant Rejected",
-  pending_merchant: "Pending Merchant",
-  pending_customer: "Pending Customer",
+  rejected: "Rejected",
+  pending: "Pending",
 };
 
 const columnHelper = createDataTableColumnHelper<AdminQuote>();
@@ -30,7 +31,17 @@ const columns = [
   }),
   columnHelper.accessor("status", {
     header: "Status",
-    cell: ({ getValue }) => StatusTitles[getValue()],
+    cell: ({ getValue, row }) => {
+      const status = getValue();
+      if (
+        status === "accepted" &&
+        `${(row.original as any)?.payment_status}` === "captured"
+      ) {
+        return <QuoteStatusCell status={"captured" as QuoteStatus} />;
+      } else {
+        return <QuoteStatusCell status={status as QuoteStatus} />;
+      }
+    },
   }),
   columnHelper.accessor("customer.email", {
     header: "Email",
@@ -91,10 +102,18 @@ const Quotes = () => {
   return (
     <>
       <Container className="flex flex-col p-0 overflow-hidden">
-        <Heading className="p-6 pb-0 font-sans font-medium h1-core">
-          Quotes
-        </Heading>
-
+        <div className="flex items-center justify-between px-6 py-4">
+          <Heading level="h2">Quotes</Heading>
+          <Button size="small" variant="secondary" asChild>
+            <Button
+              size="small"
+              variant="secondary"
+              onClick={() => navigate("/quotes/create")}
+            >
+              Create
+            </Button>
+          </Button>
+        </div>
         <DataTable instance={table}>
           <DataTable.Toolbar>
             <Heading>Products</Heading>

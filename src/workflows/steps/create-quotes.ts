@@ -7,6 +7,7 @@ type StepInput = {
   order_change_id: string;
   cart_id: string;
   customer_id: string;
+  note: string;
 }[];
 
 export const createQuotesStep = createStep(

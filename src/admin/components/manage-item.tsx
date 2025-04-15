@@ -9,10 +9,9 @@ import {
   toast,
 } from "@medusajs/ui";
 import { useMemo } from "react";
-import {
-  useUpdateQuoteItem,
-} from "../hooks/quotes";
+import { useUpdateQuoteItem } from "../hooks/quotes";
 import { Amount } from "./amount";
+import { Controller } from "react-hook-form";
 
 type ManageItemProps = {
   originalItem: AdminOrder["items"][0];
@@ -68,7 +67,6 @@ export function ManageItem({
       <div className="flex flex-col items-center gap-x-2 gap-y-2 p-3 text-sm md:flex-row">
         <div className="flex flex-1 items-center justify-between">
           <div className="flex flex-row items-center gap-x-3">
-
             <div className="flex flex-col">
               <div>
                 <Text className="txt-small" as="span" weight="plus">
@@ -84,37 +82,33 @@ export function ManageItem({
           </div>
 
           {isItemUpdated && (
-              <Badge
-                size="2xsmall"
-                rounded="full"
-                color="orange"
-                className="mr-1"
-              >
-                Modified
-              </Badge>
+            <Badge
+              size="2xsmall"
+              rounded="full"
+              color="orange"
+              className="mr-1"
+            >
+              Modified
+            </Badge>
           )}
         </div>
 
         <div className="flex flex-1 justify-between">
           <div className="flex flex-grow items-center gap-2">
-            <Input
-              className="bg-ui-bg-base txt-small w-[67px] rounded-lg [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
-              type="number"
-              disabled={item.detail.fulfilled_quantity === item.quantity}
-              min={item.detail.fulfilled_quantity}
+            <Controller
+              name={`items.${item.id}.quantity`}
               defaultValue={item.quantity}
-              onBlur={(e) => {
-                const val = e.target.value;
-                const quantity = val === "" ? null : Number(val);
-
-                if (quantity) {
-                  onUpdate({ quantity });
-                }
-              }}
+              render={({ field }) => (
+                <Input
+                  {...field}
+                  className="bg-ui-bg-base txt-small w-[67px] rounded-lg [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+                  type="number"
+                  disabled={item.detail.fulfilled_quantity === item.quantity}
+                  min={item.detail.fulfilled_quantity}
+                />
+              )}
             />
-            <Text className="txt-small text-ui-fg-subtle">
-              Quantity
-            </Text>
+            <Text className="txt-small text-ui-fg-subtle">Quantity</Text>
           </div>
 
           <div className="text-ui-fg-subtle txt-small mr-2 flex flex-shrink-0">
@@ -130,26 +124,36 @@ export function ManageItem({
       <div className="grid grid-cols-1 gap-2 p-3 md:grid-cols-2">
         <div className="flex flex-col gap-y-1">
           <Label>Price</Label>
-          <Hint className="!mt-1">
-            Override the unit price of this product
-          </Hint>
+          <Hint className="!mt-1">Override the unit price of this product</Hint>
         </div>
 
         <div className="flex items-center gap-1">
           <div className="flex-grow">
-            <CurrencyInput
-              symbol={currencyCode}
-              code={currencyCode}
+            <Controller
+              name={`items.${item.id}.unit_price`}
               defaultValue={item.unit_price}
-              type="numeric"
-              min={0}
-              onBlur={(e) => {
-                onUpdate({
-                  unit_price: parseFloat(e.target.value),
-                  quantity: item.quantity,
-                });
-              }}
-              className="bg-ui-bg-field-component hover:bg-ui-bg-field-component-hover"
+              render={({ field }) => (
+                <CurrencyInput
+                  {...field}
+                  symbol={currencyCode}
+                  code={currencyCode}
+                  type="numeric"
+                  max={999999999999999}
+                  min={0}
+                  style={{ textAlign: "left" }}
+                  value={field.value ?? ""}
+                  onChange={(e) => {
+                    const raw = e.target.value.replace(/,/g, "");
+                    const numericValue = Number(raw);
+                    if (!isNaN(numericValue)) {
+                      field.onChange(numericValue);
+                    } else {
+                      field.onChange("");
+                    }
+                  }}
+                  className="bg-ui-bg-field-component hover:bg-ui-bg-field-component-hover"
+                />
+              )}
             />
           </div>
         </div>
