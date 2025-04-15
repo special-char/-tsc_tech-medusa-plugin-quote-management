@@ -8,6 +8,7 @@ import { CreateQuoteType } from "./validators";
 import {
   createCartWorkflow,
   orderEditUpdateItemQuantityWorkflow,
+  updateLineItemInCartWorkflow,
 } from "@medusajs/medusa/core-flows";
 import { createRequestForQuoteWorkflow } from "../../../workflows/create-request-for-quote";
 import { merchantUpdateQuoteWorkflow } from "../../../workflows/update-quote";
@@ -90,7 +91,40 @@ export const POST = async (
       quote_id: createdQuote.id,
     },
   });
+  const { data: quotesData } = await query.graph({
+    entity: "quotes",
+    filters: { id: createdQuote.id },
+    fields: ["*", "draft_order.*", "draft_order.items.*"],
+  });
+  const { data: cartData } = await query.graph({
+    entity: "cart",
+    filters: { id: quotesData[0].cart_id },
+    fields: ["*", "items.*"],
+  });
 
+  if (
+    quotesData &&
+    quotesData[0] &&
+    quotesData[0].draft_order &&
+    quotesData[0].draft_order.items &&
+    quotesData[0]?.draft_order?.items[0]?.unit_price != null &&
+    cartData[0]?.items[0]?.unit_price != null &&
+    Number(quotesData[0].draft_order.items[0].unit_price) !=
+      Number(cartData[0].items[0].unit_price)
+  ) {
+    console.log("updating line item in cart");
+
+    await updateLineItemInCartWorkflow(req.scope).run({
+      input: {
+        cart_id: quotesData[0].cart_id,
+        item_id: cartData[0].items[0]?.id,
+        update: {
+          unit_price: req.body.unit_price,
+          quantity: req.body.quantity,
+        },
+      },
+    });
+  }
   const { data: quotes, metadata } = await query.graph({
     entity: "quotes",
     filters: { id: createdQuote.id },
