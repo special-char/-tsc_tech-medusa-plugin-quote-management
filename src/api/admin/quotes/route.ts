@@ -1,9 +1,17 @@
-import { MedusaRequest, MedusaResponse } from "@medusajs/framework/http";
+import {
+  AuthenticatedMedusaRequest,
+  MedusaRequest,
+  MedusaResponse,
+} from "@medusajs/framework/http";
 import { ContainerRegistrationKeys } from "@medusajs/framework/utils";
 import { CreateQuoteType } from "./validators";
-import { createCartWorkflow } from "@medusajs/medusa/core-flows";
+import {
+  createCartWorkflow,
+  orderEditUpdateItemQuantityWorkflow,
+} from "@medusajs/medusa/core-flows";
 import { createRequestForQuoteWorkflow } from "../../../workflows/create-request-for-quote";
 import { merchantUpdateQuoteWorkflow } from "../../../workflows/update-quote";
+import { merchantSendQuoteWorkflow } from "../../../workflows/merchant-send-quote";
 
 export const GET = async (req: MedusaRequest, res: MedusaResponse) => {
   const query = req.scope.resolve(ContainerRegistrationKeys.QUERY);
@@ -22,7 +30,7 @@ export const GET = async (req: MedusaRequest, res: MedusaResponse) => {
 };
 
 export const POST = async (
-  req: MedusaRequest<CreateQuoteType>,
+  req: AuthenticatedMedusaRequest<CreateQuoteType>,
   res: MedusaResponse
 ) => {
   const query = req.scope.resolve(ContainerRegistrationKeys.QUERY);
@@ -55,6 +63,31 @@ export const POST = async (
     input: {
       quote_id: createdQuote.id,
       valid_till: new Date(req.body.valid_till),
+    },
+  });
+  const { data: order } = await query.graph({
+    entity: "orders",
+    filters: { id: createdQuote.draft_order_id },
+    fields: ["id", "items.*"],
+  });
+
+  const { result } = await orderEditUpdateItemQuantityWorkflow(req.scope).run({
+    input: {
+      order_id: createdQuote.draft_order_id,
+      items: [
+        {
+          quantity: req.body.quantity,
+          unit_price: req.body.unit_price,
+          id: order[0].items[0].id,
+        },
+      ],
+    },
+  });
+
+  await merchantSendQuoteWorkflow(req.scope).run({
+    input: {
+      customer_id: req.auth_context.actor_id,
+      quote_id: createdQuote.id,
     },
   });
 

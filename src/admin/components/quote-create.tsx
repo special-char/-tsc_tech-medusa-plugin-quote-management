@@ -250,7 +250,7 @@ const QuoteCreateForm = (props: Props) => {
       data.variants.map((variant) => ({
         label: variant.title,
         value: variant.id,
-        thumbnail: variant.product?.thumbnail,
+        image: variant.product?.thumbnail,
         price: variant.calculated_price.calculated_amount,
       })),
   });
@@ -396,14 +396,6 @@ const QuoteCreateForm = (props: Props) => {
                           onChange={(e) => {
                             const selectedVariant = variantOptions.find(
                               (option: ComboboxOption) => option.value === e
-                            );
-                            console.log(
-                              "selectedVariant?.price:::::",
-                              selectedVariant?.price
-                            );
-                            console.log(
-                              " selectedVariant.price?.calculated_amount::::",
-                              selectedVariant?.price?.calculated_amount
                             );
 
                             if (selectedVariant?.price) {

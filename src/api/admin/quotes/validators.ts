@@ -14,8 +14,8 @@ export const AdminCreateQuote = z.object({
   region_id: z.string(),
   variant_id: z.string(),
   quantity: z.number(),
-
   valid_till: z.string(),
+  unit_price: z.number(),
 });
 
 export type CreateQuoteUpdateType = z.infer<typeof AdminCreateQuote>;

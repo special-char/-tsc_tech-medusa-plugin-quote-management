@@ -30,18 +30,19 @@ export const QuoteCreate = () => {
       quantity: Number(data.quantity),
       variant_id: data.variant_id,
       valid_till: new Date(data.valid_till),
+      unit_price: Number(data.unit_price),
     };
 
     try {
       mutate(reqData, {
         onSuccess: async (response: any) => {
           try {
-            await updateItem({
-              unit_price: Number(data.unit_price),
-              itemId: response.quotes[0].draft_order.items[0].id,
-              id: response.quotes[0].draft_order.id,
-              quantity: Number(data.quantity),
-            });
+            // await updateItem({
+            //   unit_price: Number(data.unit_price),
+            //   itemId: response.quotes[0].draft_order.items[0].id,
+            //   id: response.quotes[0].draft_order.id,
+            //   quantity: Number(data.quantity),
+            // });
           } catch (e) {
             toast.error((e as any).message);
           }
