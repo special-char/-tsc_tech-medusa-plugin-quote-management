@@ -138,7 +138,19 @@ export function ManageItem({
                   symbol={currencyCode}
                   code={currencyCode}
                   type="numeric"
+                  max={999999999999999}
                   min={0}
+                  style={{ textAlign: "left" }}
+                  value={field.value ?? ""}
+                  onChange={(e) => {
+                    const raw = e.target.value.replace(/,/g, "");
+                    const numericValue = Number(raw);
+                    if (!isNaN(numericValue)) {
+                      field.onChange(numericValue);
+                    } else {
+                      field.onChange("");
+                    }
+                  }}
                   className="bg-ui-bg-field-component hover:bg-ui-bg-field-component-hover"
                 />
               )}

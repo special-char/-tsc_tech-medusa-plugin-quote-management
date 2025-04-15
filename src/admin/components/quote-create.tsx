@@ -15,6 +15,90 @@ import { sdk } from "../lib/sdk";
 import ErrorMessage from "./ErrorMessage";
 import CustomerCreateModal from "./create-customer";
 import { useComboboxData } from "../hooks/use-combobox-data";
+import { Combobox } from "./combobox";
+
+type Region = {
+  id: string;
+  name: string;
+  currency_code: string;
+  offset: number;
+  limit: number;
+  count: number;
+};
+
+type Customer = {
+  id: string;
+  name: string;
+  email: string;
+  offset: number;
+  limit: number;
+  count: number;
+};
+
+type Variant = {
+  id: string;
+  name: string;
+  sku: string;
+  product: {
+    id: string;
+    title: string;
+    thumbnail: string;
+  };
+  calculated_price: number;
+};
+
+type RegionResponse = {
+  regions: Array<{
+    id: string;
+    name: string;
+    currency_code: string;
+  }>;
+  offset: number;
+  limit: number;
+  count: number;
+};
+
+type CustomerResponse = {
+  customers: Array<{
+    id: string;
+    first_name?: string;
+    last_name?: string;
+    email: string;
+  }>;
+  offset: number;
+  limit: number;
+  count: number;
+};
+
+type VariantResponse = {
+  variants: Array<{
+    id: string;
+    title: string;
+    sku: string | null;
+    calculated_price: any;
+    product: {
+      thumbnail: string | null;
+    };
+  }>;
+  offset: number;
+  limit: number;
+  count: number;
+};
+
+type ComboboxOption = {
+  value: string;
+  label: string;
+  disabled?: boolean;
+  image?: string;
+  price?: number;
+  currency_code?: string;
+};
+
+type RegionOption = {
+  value: string;
+  label: string;
+  currency_code: string;
+};
 
 type Props = {
   form: UseFormReturn<any, any, undefined>;
@@ -28,15 +112,16 @@ export enum QuoteCreateTab {
 }
 
 type TabState = Record<QuoteCreateTab, ProgressStatus>;
+
 const QuoteCreateForm = (props: Props) => {
   const [tab, setTab] = useState<QuoteCreateTab>(QuoteCreateTab.QUOTE_CREATE);
-
   const [tabState, setTabState] = useState<TabState>({
     [QuoteCreateTab.QUOTE_CREATE]: "in-progress",
   });
   const [showCustomerModal, setShowCustomerModal] = useState(false);
   const [currencyCode, setCurrencyCode] = useState<string>("");
   const [price, setPrice] = useState<string>("");
+  const [customerKey, setCustomerKey] = useState(0);
 
   const handleTabChange = async (tab: QuoteCreateTab) => {
     if (tab === QuoteCreateTab.QUOTE_CREATE) {
@@ -63,7 +148,6 @@ const QuoteCreateForm = (props: Props) => {
   const handleContinue = async () => {
     switch (tab) {
       case QuoteCreateTab.QUOTE_CREATE: {
-        // Validate region before continuing
         const valid = await props.form.trigger([
           "quantity",
           "variant_id",
@@ -82,53 +166,98 @@ const QuoteCreateForm = (props: Props) => {
     }
     await props.form.handleSubmit(props.onSubmit)();
   };
-  const [customerKey, setCustomerKey] = useState(0);
-  const region = useComboboxData({
-    queryKey: ["region"],
+
+  const {
+    options: regionOptions,
+    searchValue: regionSearchValue,
+    onSearchValueChange: onRegionSearchValueChange,
+    isFetchingNextPage: isFetchingNextRegions,
+    hasNextPage: hasNextRegions,
+    fetchNextPage: fetchNextRegions,
+  } = useComboboxData<
+    RegionResponse,
+    { q?: string; offset?: number; limit?: number }
+  >({
+    queryKey: ["regions"],
     queryFn: (params) => sdk.admin.region.list(params),
     getOptions: (data) =>
-      data.regions.map((type) => ({
-        label: type.name,
-        value: type.id,
-        currency_code: type.currency_code,
-      })),
+      data.regions.map((region) => ({
+        label: region.name,
+        value: region.id,
+        currency_code: region.currency_code,
+      })) as ComboboxOption[],
   });
-  const customer = useComboboxData({
-    queryKey: ["customer"],
-    queryFn: (params) => sdk.admin.customer.list(params),
-    getOptions: (data) =>
-      data.customers.map((type) => ({
-        label: type.email,
-        value: type.id,
-      })),
-  });
-  const selectedRegionId = props.form.watch("region_id");
-  const variant = useComboboxData({
-    queryKey: ["variant", selectedRegionId],
-    queryFn: (params: any) =>
-      sdk.client.fetch<any>(
-        `admin/product-variant?region_id=${selectedRegionId}&fields=*variants.calculated_price`,
-        params
-      ),
-    getOptions: (data) => {
-      return data.variants.map((type: any) => {
-        return {
-          label: type.title + " - " + type.sku,
-          value: type.id,
-          image: type.product?.thumbnail,
-          price: type.calculated_price,
-        };
-      });
+
+  const {
+    options: customerOptions,
+    searchValue: customerSearchValue,
+    onSearchValueChange: onCustomerSearchValueChange,
+    fetchNextPage: fetchNextCustomers,
+    isFetchingNextPage: isFetchingNextCustomers,
+    refetch: refetchCustomers,
+  } = useComboboxData<
+    CustomerResponse,
+    { q?: string; offset?: number; limit?: number }
+  >({
+    queryKey: ["customers"],
+    queryFn: async ({ q, offset, limit }) => {
+      const response = await sdk.client.fetch<CustomerResponse>(
+        "/admin/customers",
+        {
+          query: { q, offset, limit },
+        }
+      );
+      return response;
     },
+    getOptions: (data) =>
+      data.customers.map((customer) => ({
+        label: `${customer.email}`.trim(),
+        value: customer.id,
+      })),
   });
+
+  const selectedRegionId = props.form.watch("region_id");
+
+  const { options: variantOptions } = useComboboxData<
+    VariantResponse,
+    { q?: string; offset?: number; limit?: number }
+  >({
+    queryKey: ["variants", selectedRegionId],
+    queryFn: async ({ q, offset, limit }) => {
+      if (!selectedRegionId) {
+        return {
+          variants: [],
+          offset: 0,
+          limit: 0,
+          count: 0,
+        };
+      }
+      const response = await sdk.client.fetch<VariantResponse>(
+        "/admin/product-variant",
+        {
+          query: {
+            q,
+            offset,
+            limit,
+            region_id: selectedRegionId,
+            fields: "*variants.calculated_price",
+          },
+        }
+      );
+      return response;
+    },
+    getOptions: (data) =>
+      data.variants.map((variant) => ({
+        label: variant.title,
+        value: variant.id,
+        thumbnail: variant.product?.thumbnail,
+        price: variant.calculated_price.calculated_amount,
+      })),
+  });
+
   return (
     <FocusModal open={props.open} onOpenChange={props.onOpenChange}>
       <FocusModal.Content>
-        {/* <KeyboundForm
-        hidden={true}
-        className="flex h-full flex-col"
-        onSubmit={props.form.handleSubmit(props.onSubmit)}
-      > */}
         <ProgressTabs
           value={tab}
           onValueChange={(v) => handleTabChange(v as QuoteCreateTab)}
@@ -154,8 +283,6 @@ const QuoteCreateForm = (props: Props) => {
               value={QuoteCreateTab.QUOTE_CREATE}
               className="flex h-full flex-col items-center overflow-y-auto"
             >
-              {/* region_id, customer_id, quantity, variant_id */}
-
               <div className="flex w-full max-w-3xl flex-col gap-4 p-16">
                 <Controller
                   control={props.form.control}
@@ -165,26 +292,29 @@ const QuoteCreateForm = (props: Props) => {
                     return (
                       <div>
                         <Label>Region</Label>
-                        {/* <Combobox
+                        <Combobox
                           {...field}
-                          options={region.options}
-                          searchValue={region.searchValue}
-                          onSearchValueChange={region.onSearchValueChange}
-                          fetchNextPage={region.fetchNextPage}
+                          options={regionOptions}
+                          searchValue={regionSearchValue}
+                          onSearchValueChange={onRegionSearchValueChange}
+                          fetchNextPage={fetchNextRegions}
+                          isFetchingNextPage={isFetchingNextRegions}
+                          placeholder="Select a region"
+                          aria-label="Region selection"
                           onChange={(e) => {
-                            const selectedRegion = region.options.find(
+                            const selectedRegion = regionOptions.find(
                               (option) => option.value === e
+                            ) as
+                              | (ComboboxOption & { currency_code: string })
+                              | undefined;
+                            setCurrencyCode(
+                              selectedRegion?.currency_code || ""
                             );
-                            const newCurrencyCode =
-                              (selectedRegion as any)?.currency_code || "";
-                            setCurrencyCode(newCurrencyCode);
-
                             props.form.setValue("variant_id", "");
                             setPrice("");
-
                             field.onChange(e);
                           }}
-                        /> */}
+                        />
                         <ErrorMessage
                           control={props.form.control}
                           name={field.name}
@@ -195,43 +325,53 @@ const QuoteCreateForm = (props: Props) => {
                   }}
                 />
                 <Controller
-                  control={props.form.control}
                   name="customer_id"
+                  control={props.form.control}
                   rules={{ required: "Customer is required" }}
                   render={({ field }) => {
                     return (
                       <div>
                         <div className="flex items-center justify-between pb-1">
                           <Label>Customer</Label>
-                          {
-                            // condition to show create customer button
-                            customer.searchValue &&
-                              !customer.options.some(
-                                (opt) =>
-                                  opt.label.toLowerCase() ===
-                                  customer.searchValue.toLowerCase()
-                              ) && (
-                                <div
-                                  className="text-ui-fg-base mt-2 cursor-pointer text-sm"
-                                  onClick={() => setShowCustomerModal(true)}
-                                >
-                                  <div className="flex items-center gap-x-1">
-                                    <Plus className="h-4 w-4" />
-                                    <span>Create New Customer</span>
-                                  </div>
+                          {customerSearchValue &&
+                            !customerOptions.some(
+                              (opt) =>
+                                opt.label.toLowerCase() ===
+                                customerSearchValue.toLowerCase()
+                            ) && (
+                              <div
+                                className="text-ui-fg-base mt-2 cursor-pointer text-sm"
+                                onClick={() => setShowCustomerModal(true)}
+                              >
+                                <div className="flex items-center gap-x-1">
+                                  <Plus className="h-4 w-4" />
+                                  <span>Create New Customer</span>
                                 </div>
-                              )
-                          }
+                              </div>
+                            )}
                         </div>
-                        {/* <Combobox
+                        <Combobox
                           {...field}
-                          // key={customerKey}
-                          options={customer.options}
-                          searchValue={customer.searchValue}
-                          onSearchValueChange={customer.onSearchValueChange}
-                          fetchNextPage={customer.fetchNextPage}
-                        /> */}
-
+                          key={customerKey}
+                          options={customerOptions}
+                          searchValue={customerSearchValue}
+                          onSearchValueChange={onCustomerSearchValueChange}
+                          fetchNextPage={fetchNextCustomers}
+                          isFetchingNextPage={isFetchingNextCustomers}
+                          placeholder="Select a customer"
+                          aria-label="Customer selection"
+                        />
+                        <CustomerCreateModal
+                          open={showCustomerModal}
+                          onOpenChange={setShowCustomerModal}
+                          defaultEmail={customerSearchValue}
+                          onCreate={async (newCustomer) => {
+                            setCustomerKey((prev) => prev + 1);
+                            await refetchCustomers();
+                            field.onChange(newCustomer.id);
+                            setShowCustomerModal(false);
+                          }}
+                        />
                         <ErrorMessage
                           control={props.form.control}
                           name={field.name}
@@ -249,24 +389,31 @@ const QuoteCreateForm = (props: Props) => {
                     return (
                       <div>
                         <Label>Variant</Label>
-                        {/* <Combobox
+                        <Combobox
                           {...field}
-                          options={variant.options}
-                          searchValue={variant.searchValue}
-                          onSearchValueChange={variant.onSearchValueChange}
-                          fetchNextPage={variant.fetchNextPage}
+                          options={variantOptions}
+                          value={field.value}
                           onChange={(e) => {
-                            const selectedVariant = variant.options.find(
-                              (option: any) => option.value === e
+                            const selectedVariant = variantOptions.find(
+                              (option: ComboboxOption) => option.value === e
+                            );
+                            console.log(
+                              "selectedVariant?.price:::::",
+                              selectedVariant?.price
+                            );
+                            console.log(
+                              " selectedVariant.price?.calculated_amount::::",
+                              selectedVariant?.price?.calculated_amount
                             );
 
-                            setPrice(
-                              (selectedVariant as any)?.price
-                                ?.calculated_amount || ""
-                            );
+                            if (selectedVariant?.price) {
+                              setPrice(selectedVariant.price.toString());
+                            }
                             field.onChange(e);
                           }}
-                        /> */}
+                          placeholder="Select a variant"
+                          aria-label="Variant selection"
+                        />
                         <ErrorMessage
                           control={props.form.control}
                           name={field.name}
@@ -370,16 +517,6 @@ const QuoteCreateForm = (props: Props) => {
                     );
                   }}
                 />
-                <CustomerCreateModal
-                  open={showCustomerModal}
-                  onOpenChange={setShowCustomerModal}
-                  defaultEmail={customer.searchValue}
-                  onCreate={(newCustomer) => {
-                    setCustomerKey((prev) => prev + 1);
-                    customer.refetch?.();
-                    props.form.setValue("customer_id", newCustomer.id);
-                  }}
-                />
               </div>
             </ProgressTabs.Content>
           </FocusModal.Body>
@@ -395,7 +532,7 @@ const QuoteCreateForm = (props: Props) => {
             <Button
               key="continue-btn"
               type="button"
-              onClick={props.form.handleSubmit(props.onSubmit)}
+              onClick={handleContinue}
               size="small"
             >
               {props.form.formState.isSubmitting ? (
@@ -406,7 +543,6 @@ const QuoteCreateForm = (props: Props) => {
             </Button>
           </div>
         </FocusModal.Footer>
-        {/* </KeyboundForm> */}
       </FocusModal.Content>
     </FocusModal>
   );

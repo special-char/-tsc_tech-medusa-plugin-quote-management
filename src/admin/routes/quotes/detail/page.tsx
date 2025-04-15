@@ -16,7 +16,6 @@ import { useQuote, useRejectQuote, useSendQuote } from "../../../hooks/quotes";
 import { QuoteItems } from "../../../components/quote-items";
 import { formatAmount } from "../../../utils/format-amount";
 import ShippingInfoPopover from "../../../components/shipping-info-popover";
-import { useTranslation } from "react-i18next";
 import { AdminOrder, AdminRegion } from "@medusajs/framework/types";
 
 const QuoteDetails = () => {
@@ -298,7 +297,6 @@ const CostBreakdown = ({
   order: AdminOrder & { region?: AdminRegion | null };
   preview: AdminOrder & { region?: AdminRegion | null };
 }) => {
-  const { t } = useTranslation();
   const [isTaxOpen, setIsTaxOpen] = useState(false);
   const [isShippingOpen, setIsShippingOpen] = useState(false);
 
@@ -327,11 +325,7 @@ const CostBreakdown = ({
   return (
     <div className="text-ui-fg-subtle flex flex-col gap-y-2 px-6 py-4">
       <Cost
-        label={t(
-          automaticTaxesOn
-            ? "Item Total"
-            : "Item Subtotal"
-        )}
+        label={automaticTaxesOn ? "Item Total" : "Item Subtotal"}
         value={formatAmount(preview.item_subtotal, order.currency_code)}
       />
 
@@ -351,7 +345,7 @@ const CostBreakdown = ({
                     <span className="txt-small text-ui-fg-subtle font-medium">
                       {sm.name}
                       {sm.detail.return_id &&
-                        ` (${t("fields.returnShipping")})`}{" "}
+                        ` (${"fields.returnShipping"})`}{" "}
                       <ShippingInfoPopover key={i} shippingMethod={sm} />
                     </span>
                   </div>
@@ -371,11 +365,7 @@ const CostBreakdown = ({
       )}
 
       <Cost
-        label={t(
-          automaticTaxesOn
-            ? "Discount Total"
-            : "Discount Subtotal"
-        )}
+        label={automaticTaxesOn ? "Discount Total" : "Discount Subtotal"}
         secondaryValue={discountCodes.join(", ")}
         value={
           discountTotal > 0
@@ -393,11 +383,7 @@ const CostBreakdown = ({
             })}
           >
             <span className="txt-small select-none">
-              {t(
-                automaticTaxesOn
-                  ? "Tax Total Incl"
-                  : "Tax Total"
-              )}
+              {automaticTaxesOn ? "Tax Total Incl" : "Tax Total"}
             </span>
             {hasTaxLines && (
               <TriangleDownMini

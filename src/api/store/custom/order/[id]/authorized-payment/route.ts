@@ -18,7 +18,14 @@ export async function POST(
 
     const orderQuery = await query.graph({
       entity: "order",
-      fields: ["id", "status", "email", "total", "payment_collections.*"],
+      fields: [
+        "id",
+        "status",
+        "email",
+        "total",
+        "payment_collections.*",
+        "shipping_address.*",
+      ],
       filters: { id },
     });
 

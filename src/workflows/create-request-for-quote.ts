@@ -22,6 +22,7 @@ type WorkflowInput = {
   first_name?: string;
   last_name?: string;
   email?: string;
+  note?: string;
 };
 
 export const createRequestForQuoteWorkflow = createWorkflow(
@@ -113,6 +114,7 @@ export const createRequestForQuoteWorkflow = createWorkflow(
           cart_id: carts[0].id,
           customer_id: customers[0].id,
           order_change_id: changeOrder.id,
+          note: input.note || "",
         };
       }
     );

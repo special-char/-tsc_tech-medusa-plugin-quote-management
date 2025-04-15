@@ -17,4 +17,5 @@ export const CreateQuote = z.object({
   first_name: z.string().optional(),
   last_name: z.string().optional(),
   email: z.string().email().optional(),
+  note: z.string().optional(),
 });

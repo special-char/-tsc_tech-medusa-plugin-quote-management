@@ -14,6 +14,8 @@ import { useNavigate } from "react-router-dom";
 import { useQuotes } from "../../hooks/quotes";
 import { useState } from "react";
 import { AdminQuote } from "../../types";
+import { QuoteStatusCell } from "../../components/quote-status";
+import { QuoteStatus } from "../../utils/quote-status-helper";
 
 const StatusTitles: Record<string, string> = {
   accepted: "Accepted",
@@ -29,7 +31,17 @@ const columns = [
   }),
   columnHelper.accessor("status", {
     header: "Status",
-    cell: ({ getValue }) => StatusTitles[getValue()],
+    cell: ({ getValue, row }) => {
+      const status = getValue();
+      if (
+        status === "accepted" &&
+        `${(row.original as any)?.payment_status}` === "captured"
+      ) {
+        return <QuoteStatusCell status={"captured" as QuoteStatus} />;
+      } else {
+        return <QuoteStatusCell status={status as QuoteStatus} />;
+      }
+    },
   }),
   columnHelper.accessor("customer.email", {
     header: "Email",

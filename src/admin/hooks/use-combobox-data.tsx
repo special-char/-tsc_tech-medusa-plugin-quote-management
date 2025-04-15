@@ -19,7 +19,7 @@ type ComboboxQueryParams = {
 };
 
 export const useComboboxData = <
-  TResponse extends ComboboxExternalData,
+  TResponse extends ComboboxExternalData & Record<string, any>,
   TParams extends ComboboxQueryParams
 >({
   queryKey,
@@ -31,7 +31,7 @@ export const useComboboxData = <
 }: {
   queryKey: QueryKey;
   queryFn: (params: TParams) => Promise<TResponse>;
-  getOptions: (data: TResponse) => { label: string; value: string }[];
+  getOptions: (data: TResponse) => { label: string; value: string;[key: string]: any }[];
   defaultValueKey?: keyof TParams;
   defaultValue?: string | string[];
   pageSize?: number;

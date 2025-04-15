@@ -11,4 +11,5 @@ export const Quote = model.define("quotes", {
   order_change_id: model.text(),
   cart_id: model.text(),
   valid_till: model.dateTime().nullable(),
+  notes: model.text().nullable(),
 });

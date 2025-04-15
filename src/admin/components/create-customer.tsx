@@ -19,6 +19,8 @@ const CustomerCreateModal = ({
   const [email, setEmail] = useState(defaultEmail);
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
+
+  const [companyName, setCompanyName] = useState("");
   const [loading, setLoading] = useState(false);
 
   const handleCreate = async () => {
@@ -34,6 +36,7 @@ const CustomerCreateModal = ({
         email,
         first_name: firstName,
         last_name: lastName,
+        company_name: companyName,
       });
 
       const newCustomer = res.customer;
@@ -85,6 +88,14 @@ const CustomerCreateModal = ({
               value={lastName}
               onChange={(e) => setLastName(e.target.value)}
               placeholder="Enter last name"
+            />
+          </div>
+          <div>
+            <Label>Company Name</Label>
+            <Input
+              value={companyName}
+              onChange={(e) => setCompanyName(e.target.value)}
+              placeholder="Enter company name"
             />
           </div>
         </FocusModal.Body>

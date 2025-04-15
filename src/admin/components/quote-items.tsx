@@ -16,7 +16,6 @@ export const QuoteItem = ({
   originalItem?: AdminOrderLineItem;
   currencyCode: string;
 }) => {
-
   const isItemUpdated = useMemo(
     () => !!item.actions?.find((a) => a.action === "ITEM_UPDATE"),
     [item]
@@ -68,7 +67,6 @@ export const QuoteItem = ({
           </div>
 
           <div>
-
             {isItemUpdated && (
               <Badge
                 size="2xsmall"
