@@ -47,7 +47,10 @@ export const POST = async (
       input: {
         cart_id: quotes[0].cart_id,
         item_id: cart[0].items[0]?.id,
-        update: { unit_price: quotes[0].draft_order.items[0].unit_price },
+        update: {
+          unit_price: quotes[0].draft_order.items[0].unit_price,
+          quantity: quotes[0].draft_order.items[0].quantity,
+        },
       },
     });
   }
