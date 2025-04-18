@@ -4,6 +4,7 @@ export const quoteFields = [
   "created_at",
   "updated_at",
   "valid_till",
+  "notes",
   "*customer",
   "cart.id",
   "draft_order.id",

@@ -18,7 +18,6 @@ export const GET = async (
       filters: { customer_id: req.auth_context.actor_id },
       fields: req.queryConfig.fields,
     },
-    { throwIfKeyNotFound: true } //TODO::: test need
   );
 
   const orderModuleService = req.scope.resolve(Modules.ORDER);

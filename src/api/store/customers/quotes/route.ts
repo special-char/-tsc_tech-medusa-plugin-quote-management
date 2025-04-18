@@ -79,6 +79,7 @@ export const POST = async (
     input: {
       cart_id: cart_id,
       customer_id: customer_id,
+      note: req.body.note
     },
   });
 
