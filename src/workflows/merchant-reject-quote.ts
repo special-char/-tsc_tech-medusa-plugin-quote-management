@@ -14,7 +14,7 @@ export const merchantRejectQuoteWorkflow = createWorkflow(
     // @ts-ignore
     const { data: quotes } = useQueryGraphStep({
       entity: "quotes",
-      fields: ["id", "status"],
+      fields: ["id", "status", "draft_order_id", "*"],
       filters: { id: input.quote_id },
       options: {
         throwIfKeyNotFound: true,
