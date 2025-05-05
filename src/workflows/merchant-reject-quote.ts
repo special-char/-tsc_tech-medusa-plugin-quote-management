@@ -1,4 +1,4 @@
-import { useQueryGraphStep } from "@medusajs/core-flows";
+import { emitEventStep, useQueryGraphStep } from "@medusajs/core-flows";
 import { createWorkflow } from "@medusajs/workflows-sdk";
 import { validateQuoteNotAccepted } from "./steps/validate-quote-not-accepted";
 import { updateQuotesStep } from "./steps/update-quotes";
@@ -32,5 +32,11 @@ export const merchantRejectQuoteWorkflow = createWorkflow(
         status: QuoteStatus.REJECTED,
       },
     ]);
+
+    //event trigger
+    emitEventStep({
+      eventName: "quote.rejected",
+      data: { id: quotes[0].draft_order_id },
+    });
   }
 );

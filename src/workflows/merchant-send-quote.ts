@@ -1,5 +1,6 @@
 import {
   confirmOrderEditRequestWorkflow,
+  emitEventStep,
   updateOrderWorkflow,
   useQueryGraphStep,
 } from "@medusajs/core-flows";
@@ -7,7 +8,7 @@ import { createWorkflow } from "@medusajs/workflows-sdk";
 import { updateQuotesStep } from "./steps/update-quotes";
 import { validateQuoteNotAccepted } from "./steps/validate-quote-not-accepted";
 import { QuoteStatus } from "../modules/quotes";
-import { OrderStatus } from "@medusajs/framework/utils";
+import { OrderStatus, OrderWorkflowEvents } from "@medusajs/framework/utils";
 
 type WorkflowInput = {
   quote_id: string;
@@ -49,5 +50,11 @@ export const merchantSendQuoteWorkflow = createWorkflow(
         confirmed_by: input.customer_id,
       },
     });
+
+    //event trigger
+    emitEventStep({
+      eventName: "quote.sent",
+      data: { id: quotes[0].draft_order_id },
+    })
   }
 );
