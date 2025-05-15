@@ -35,6 +35,13 @@ export const merchantSendQuoteWorkflow = createWorkflow(
         status: QuoteStatus.ACCEPTED,
       },
     ]);
+
+    //event trigger
+    emitEventStep({
+      eventName: "quote.sent",
+      data: { id: quotes[0].draft_order_id },
+    });
+
     updateOrderWorkflow.runAsStep({
       input: {
         id: quotes[0].draft_order_id,
@@ -50,11 +57,5 @@ export const merchantSendQuoteWorkflow = createWorkflow(
         confirmed_by: input.customer_id,
       },
     });
-
-    //event trigger
-    emitEventStep({
-      eventName: "quote.sent",
-      data: { id: quotes[0].draft_order_id },
-    })
   }
 );
