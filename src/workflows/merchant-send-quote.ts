@@ -39,7 +39,7 @@ export const merchantSendQuoteWorkflow = createWorkflow(
     //event trigger
     emitEventStep({
       eventName: "quote.sent",
-      data: { id: quotes[0].draft_order_id },
+      data: { id: quotes[0].draft_order_id, quote_id: input.quote_id },
     });
 
     updateOrderWorkflow.runAsStep({
