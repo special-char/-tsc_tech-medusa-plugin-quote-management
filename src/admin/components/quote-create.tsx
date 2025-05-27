@@ -64,6 +64,7 @@ type CustomerResponse = {
     first_name?: string;
     last_name?: string;
     email: string;
+    has_account: boolean;
   }>;
   offset: number;
   limit: number;
@@ -77,6 +78,7 @@ type VariantResponse = {
     sku: string | null;
     calculated_price: any;
     product: {
+      title: string;
       thumbnail: string | null;
     };
   }>;
@@ -109,6 +111,7 @@ type Props = {
 
 export enum QuoteCreateTab {
   QUOTE_CREATE = "Quote-Create",
+  ADDRESS = "Address",
 }
 
 type TabState = Record<QuoteCreateTab, ProgressStatus>;
@@ -117,6 +120,7 @@ const QuoteCreateForm = (props: Props) => {
   const [tab, setTab] = useState<QuoteCreateTab>(QuoteCreateTab.QUOTE_CREATE);
   const [tabState, setTabState] = useState<TabState>({
     [QuoteCreateTab.QUOTE_CREATE]: "in-progress",
+    [QuoteCreateTab.ADDRESS]: "not-started",
   });
   const [showCustomerModal, setShowCustomerModal] = useState(false);
   const [currencyCode, setCurrencyCode] = useState<string>("");
@@ -124,23 +128,36 @@ const QuoteCreateForm = (props: Props) => {
   const [customerKey, setCustomerKey] = useState(0);
 
   const handleTabChange = async (tab: QuoteCreateTab) => {
+    // Don't do anything if trying to navigate to current tab
     if (tab === QuoteCreateTab.QUOTE_CREATE) {
       setTab(tab);
       setTabState((prev) => ({
         ...prev,
         [QuoteCreateTab.QUOTE_CREATE]: "in-progress",
+        [QuoteCreateTab.ADDRESS]: "not-started",
       }));
       return;
     }
-    const valid = await props.form.trigger([
-      "region_id",
-      "customer_id",
-      "quantity",
-      "variant_id",
-      "unit_price",
-      "valid_till",
-    ]);
-    if (!valid) {
+
+    if (tab === QuoteCreateTab.ADDRESS) {
+      const valid = await props.form.trigger([
+        "region_id",
+        "customer_id",
+        "quantity",
+        "variant_id",
+        "unit_price",
+        "valid_till",
+      ]);
+      if (!valid) {
+        return;
+      }
+
+      setTab(tab);
+      setTabState((prev) => ({
+        ...prev,
+        [QuoteCreateTab.QUOTE_CREATE]: "completed",
+        [QuoteCreateTab.ADDRESS]: "in-progress",
+      }));
       return;
     }
   };
@@ -149,24 +166,24 @@ const QuoteCreateForm = (props: Props) => {
     switch (tab) {
       case QuoteCreateTab.QUOTE_CREATE: {
         const valid = await props.form.trigger([
+          "region_id",
+          "customer_id",
           "quantity",
           "variant_id",
-          "customer_id",
-          "region_id",
           "unit_price",
           "valid_till",
         ]);
         if (valid) {
-          handleTabChange(QuoteCreateTab.QUOTE_CREATE);
+          handleTabChange(QuoteCreateTab.ADDRESS);
         }
         break;
       }
-      default:
+
+      case QuoteCreateTab.ADDRESS:
+        await props.form.handleSubmit(props.onSubmit)();
         break;
     }
-    await props.form.handleSubmit(props.onSubmit)();
   };
-
   const {
     options: regionOptions,
     searchValue: regionSearchValue,
@@ -211,14 +228,22 @@ const QuoteCreateForm = (props: Props) => {
     },
     getOptions: (data) =>
       data.customers.map((customer) => ({
-        label: `${customer.email}`.trim(),
+        label: `${customer.email} (${
+          customer?.has_account === false ? "Guest" : "Registered"
+        })`.trim(),
         value: customer.id,
       })),
   });
 
   const selectedRegionId = props.form.watch("region_id");
 
-  const { options: variantOptions } = useComboboxData<
+  const {
+    options: variantOptions,
+    fetchNextPage: fetchNextVariants,
+    searchValue: variantSearchValue,
+    onSearchValueChange: onVariantSearchValueChange,
+    isFetchingNextPage: isFetchingNextVariants,
+  } = useComboboxData<
     VariantResponse,
     { q?: string; offset?: number; limit?: number }
   >({
@@ -248,10 +273,10 @@ const QuoteCreateForm = (props: Props) => {
     },
     getOptions: (data) =>
       data.variants.map((variant) => ({
-        label: variant.title,
+        label: `${variant.title} - ${variant?.product?.title}`,
         value: variant.id,
         image: variant.product?.thumbnail,
-        price: variant.calculated_price.calculated_amount,
+        price: variant?.calculated_price?.calculated_amount,
       })),
   });
 
@@ -260,7 +285,6 @@ const QuoteCreateForm = (props: Props) => {
       <FocusModal.Content>
         <ProgressTabs
           value={tab}
-          onValueChange={(v) => handleTabChange(v as QuoteCreateTab)}
           className="flex h-full flex-col overflow-hidden"
         >
           <FocusModal.Header>
@@ -271,8 +295,17 @@ const QuoteCreateForm = (props: Props) => {
                     className="w-full"
                     value={QuoteCreateTab.QUOTE_CREATE}
                     status={tabState[QuoteCreateTab.QUOTE_CREATE]}
+                    onClick={() => handleTabChange(QuoteCreateTab.QUOTE_CREATE)}
                   >
                     Quote
+                  </ProgressTabs.Trigger>
+                  <ProgressTabs.Trigger
+                    className="w-full"
+                    value={QuoteCreateTab.ADDRESS}
+                    status={tabState[QuoteCreateTab.ADDRESS]}
+                    onClick={() => handleTabChange(QuoteCreateTab.ADDRESS)}
+                  >
+                    Address
                   </ProgressTabs.Trigger>
                 </ProgressTabs.List>
               </div>
@@ -393,6 +426,10 @@ const QuoteCreateForm = (props: Props) => {
                           {...field}
                           options={variantOptions}
                           value={field.value}
+                          searchValue={variantSearchValue}
+                          onSearchValueChange={onVariantSearchValueChange}
+                          fetchNextPage={fetchNextVariants}
+                          isFetchingNextPage={isFetchingNextVariants}
                           onChange={(e) => {
                             const selectedVariant = variantOptions.find(
                               (option: ComboboxOption) => option.value === e
@@ -511,6 +548,39 @@ const QuoteCreateForm = (props: Props) => {
                 />
               </div>
             </ProgressTabs.Content>
+            <ProgressTabs.Content
+              value={QuoteCreateTab.ADDRESS}
+              className="flex h-full flex-col items-center overflow-y-auto"
+            >
+              <div className="flex w-full max-w-3xl flex-col gap-4 p-16">
+                <Controller
+                  control={props.form.control}
+                  name="shipping_address_1"
+                  rules={{ required: "Address Line 1 is required" }}
+                  render={({ field }) => {
+                    return (
+                      <div>
+                        <Label>Address Line 1</Label>
+                        <Input
+                          type="text"
+                          {...field}
+                          placeholder="Enter address line 1"
+                          className="w-full"
+                          onChange={(e) => {
+                            field.onChange(e.target.value);
+                          }}
+                        />
+                        <ErrorMessage
+                          control={props.form.control}
+                          name={field.name}
+                          rules={{ required: "Address Line 1 is required" }}
+                        />
+                      </div>
+                    );
+                  }}
+                />
+              </div>
+            </ProgressTabs.Content>
           </FocusModal.Body>
         </ProgressTabs>
         <FocusModal.Footer>
@@ -527,10 +597,14 @@ const QuoteCreateForm = (props: Props) => {
               onClick={handleContinue}
               size="small"
             >
-              {props.form.formState.isSubmitting ? (
-                <Spinner className="animate-spin" />
+              {tab === QuoteCreateTab.ADDRESS ? (
+                props.form.formState.isSubmitting ? (
+                  <Spinner className="animate-spin" />
+                ) : (
+                  "Submit"
+                )
               ) : (
-                "Create Quote"
+                "Continue"
               )}
             </Button>
           </div>

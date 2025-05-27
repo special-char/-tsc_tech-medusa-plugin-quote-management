@@ -36,7 +36,7 @@ export const POST = async (
 ) => {
   const query = req.scope.resolve(ContainerRegistrationKeys.QUERY);
 
-  console.log("cart_id");
+  // console.log("cart_id");
   //create cart
   const cart = await createCartWorkflow(req.scope).run({
     input: {
