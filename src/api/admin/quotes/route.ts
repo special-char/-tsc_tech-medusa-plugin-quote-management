@@ -36,7 +36,6 @@ export const POST = async (
 ) => {
   const query = req.scope.resolve(ContainerRegistrationKeys.QUERY);
 
-  // console.log("cart_id");
   //create cart
   const cart = await createCartWorkflow(req.scope).run({
     input: {
@@ -48,6 +47,15 @@ export const POST = async (
         },
       ],
       customer_id: req.body.customer_id,
+      billing_address: req.body.billing_address,
+      shipping_address: req.body.shipping_address,
+      shipping_address_id: req.body.shipping_address_id,
+      billing_address_id: req.body.billing_address_id,
+      ...(req.body.gstNumber && {
+        metadata: {
+          gstNumber: req.body.gstNumber,
+        },
+      }),
     },
   });
   let cart_id = cart.result.id;

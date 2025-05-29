@@ -48,6 +48,7 @@ export const createRequestForQuoteWorkflow = createWorkflow(
         "items.*",
         "shipping_methods.*",
         "promotions.code",
+        "metadata",
       ],
       filters: { id: cart_id },
       options: {
@@ -80,6 +81,7 @@ export const createRequestForQuoteWorkflow = createWorkflow(
           promo_codes: carts[0].promotions?.map((promo) => promo?.code),
           currency_code: carts[0].currency_code,
           shipping_methods: carts[0].shipping_methods || [],
+          metadata: carts[0].metadata,
         } as CreateOrderWorkflowInput;
       }
     );
