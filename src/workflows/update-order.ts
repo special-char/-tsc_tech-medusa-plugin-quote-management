@@ -89,7 +89,9 @@ export const updateDraftOrderWorkflow = createWorkflow(
         delete address.id;
         update.billing_address = address as UpdateOrderAddressDTO;
       }
-
+      if (input.metadata?.gstNumber) {
+        update.metadata = input.metadata;
+      }
       return { ...restInput, ...update };
     });
 

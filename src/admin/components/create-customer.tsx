@@ -1,4 +1,4 @@
-import { Button, FocusModal, Input, Label, toast } from "@medusajs/ui";
+import { Button, FocusModal, Input, Label, Text, toast } from "@medusajs/ui";
 import { useState } from "react";
 
 import { Spinner } from "@medusajs/icons";
@@ -10,6 +10,18 @@ type CustomerCreateModalProps = {
   onCreate: (customer: { id: string; email: string }) => void;
 };
 
+const validateGstNumber = (value: string) => {
+  const gstRegex =
+    /^([0-3][0-9])[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/;
+  if (!gstRegex.test(value)) {
+    return "Enter a valid 15-character GST number";
+  }
+  if (value.length > 15) {
+    return "GST Number cannot exceed 15 characters";
+  }
+  return "";
+};
+
 const CustomerCreateModal = ({
   open,
   onOpenChange,
@@ -19,10 +31,10 @@ const CustomerCreateModal = ({
   const [email, setEmail] = useState(defaultEmail);
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
-
   const [companyName, setCompanyName] = useState("");
+  const [gstNumber, setGstNumber] = useState("");
+  const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-
   const handleCreate = async () => {
     if (!email) {
       toast.warning("Email is required");
@@ -37,6 +49,11 @@ const CustomerCreateModal = ({
         first_name: firstName,
         last_name: lastName,
         company_name: companyName,
+        ...(gstNumber && {
+          metadata: {
+            gstNumber: gstNumber,
+          },
+        }),
       });
 
       const newCustomer = res.customer;
@@ -97,6 +114,22 @@ const CustomerCreateModal = ({
               onChange={(e) => setCompanyName(e.target.value)}
               placeholder="Enter company name"
             />
+          </div>
+          <div className="flex flex-col gap-y-2">
+            <Label>GST Number</Label>
+            <Input
+              value={gstNumber}
+              onChange={(e) => {
+                setGstNumber(e.target.value);
+                setError(validateGstNumber(e.target.value));
+              }}
+              disabled={loading}
+              placeholder="Enter GST Number"
+              maxLength={15}
+              title="Enter a valid 15-character GST number"
+              data-testid="address-gst-input"
+            />
+            {error && <Text className="text-red-600">{error}</Text>}
           </div>
         </FocusModal.Body>
         <FocusModal.Footer>

@@ -41,21 +41,21 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
       filters: { id: inputBody?.quoteId },
     });
 
-    await updateCartWorkflow(req.scope).run({
-      input: {
-        id: quoteData.data[0].cart_id,
+    // await updateCartWorkflow(req.scope).run({
+    //   input: {
+    //     id: quoteData.data[0].cart_id,
 
-        shipping_address: {
-          first_name: inputBody?.shipping_address?.first_name,
-          last_name: inputBody?.shipping_address?.last_name,
-          address_1: inputBody?.shipping_address?.address_1,
-          city: inputBody?.shipping_address?.city,
-          country_code: inputBody?.shipping_address?.country_code,
-          postal_code: inputBody?.shipping_address?.postal_code,
-          phone: inputBody?.shipping_address?.phone,
-        },
-      },
-    });
+    //     shipping_address: {
+    //       first_name: inputBody?.shipping_address?.first_name,
+    //       last_name: inputBody?.shipping_address?.last_name,
+    //       address_1: inputBody?.shipping_address?.address_1,
+    //       city: inputBody?.shipping_address?.city,
+    //       country_code: inputBody?.shipping_address?.country_code,
+    //       postal_code: inputBody?.shipping_address?.postal_code,
+    //       phone: inputBody?.shipping_address?.phone,
+    //     },
+    //   },
+    // });
 
     const { result } = await updateDraftOrderWorkflow.run({
       input: inputBody,
