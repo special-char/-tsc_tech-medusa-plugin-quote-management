@@ -15,7 +15,6 @@ export const GET = async (
 ) => {
   const query = req.scope.resolve(ContainerRegistrationKeys.QUERY);
   const { id } = req.params;
-  console.log("req.queryConfig.fields", req.queryConfig.fields);
 
   const {
     data: [quote],

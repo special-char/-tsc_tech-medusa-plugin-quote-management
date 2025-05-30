@@ -118,7 +118,7 @@ const QuoteDetails = () => {
       <div className="flex flex-col gap-x-4 lg:flex-row xl:items-start">
         <div className="flex w-full flex-col gap-y-3">
           {quote.status === "accepted" &&
-            quote.payment_status === "captured" && (
+            quote?.draft_order?.payment_status === "captured" && (
               <Container className="divide-y divide-dashed p-0">
                 <div className="flex items-center justify-between px-6 py-4">
                   <Text className="txt-compact-small">

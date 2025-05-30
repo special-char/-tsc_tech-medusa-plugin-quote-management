@@ -38,24 +38,45 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
     const quoteData = await query.graph({
       entity: "quotes",
       fields: ["*"],
-      filters: { id: inputBody?.quoteId },
+      filters: { id: inputBody?.quote_id },
     });
 
-    // await updateCartWorkflow(req.scope).run({
-    //   input: {
-    //     id: quoteData.data[0].cart_id,
-
-    //     shipping_address: {
-    //       first_name: inputBody?.shipping_address?.first_name,
-    //       last_name: inputBody?.shipping_address?.last_name,
-    //       address_1: inputBody?.shipping_address?.address_1,
-    //       city: inputBody?.shipping_address?.city,
-    //       country_code: inputBody?.shipping_address?.country_code,
-    //       postal_code: inputBody?.shipping_address?.postal_code,
-    //       phone: inputBody?.shipping_address?.phone,
-    //     },
-    //   },
-    // });
+    const { result: updateCartWorkflowResult } = await updateCartWorkflow(
+      req.scope
+    ).run({
+      input: {
+        id: quoteData.data[0].cart_id,
+        shipping_address: {
+          first_name: inputBody?.shipping_address?.first_name,
+          last_name: inputBody?.shipping_address?.last_name,
+          address_1: inputBody?.shipping_address?.address_1,
+          address_2: inputBody?.shipping_address?.address_2,
+          company: inputBody?.shipping_address?.company,
+          postal_code: inputBody?.shipping_address?.postal_code,
+          city: inputBody?.shipping_address?.city,
+          country_code: inputBody?.shipping_address?.country_code,
+          province: inputBody?.shipping_address?.province,
+          phone: inputBody?.shipping_address?.phone,
+        },
+        billing_address: {
+          first_name: inputBody?.billing_address?.first_name,
+          last_name: inputBody?.billing_address?.last_name,
+          address_1: inputBody?.billing_address?.address_1,
+          address_2: inputBody?.billing_address?.address_2,
+          company: inputBody?.billing_address?.company,
+          postal_code: inputBody?.billing_address?.postal_code,
+          city: inputBody?.billing_address?.city,
+          country_code: inputBody?.billing_address?.country_code,
+          province: inputBody?.billing_address?.province,
+          phone: inputBody?.billing_address?.phone,
+        },
+        ...(inputBody?.metadata?.gstNumber && {
+          metadata: {
+            gstNumber: inputBody?.metadata?.gstNumber,
+          },
+        }),
+      },
+    });
 
     const { result } = await updateDraftOrderWorkflow.run({
       input: inputBody,

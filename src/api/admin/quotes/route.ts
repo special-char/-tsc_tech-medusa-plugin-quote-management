@@ -3,7 +3,7 @@ import {
   MedusaRequest,
   MedusaResponse,
 } from "@medusajs/framework/http";
-import { ContainerRegistrationKeys } from "@medusajs/framework/utils";
+import { ContainerRegistrationKeys, Modules } from "@medusajs/framework/utils";
 import { CreateQuoteType } from "./validators";
 import {
   createCartWorkflow,
@@ -13,6 +13,7 @@ import {
 import { createRequestForQuoteWorkflow } from "../../../workflows/create-request-for-quote";
 import { merchantUpdateQuoteWorkflow } from "../../../workflows/update-quote";
 import { merchantSendQuoteWorkflow } from "../../../workflows/merchant-send-quote";
+import { getLastPaymentStatus } from "./[id]/route";
 
 export const GET = async (req: MedusaRequest, res: MedusaResponse) => {
   const query = req.scope.resolve(ContainerRegistrationKeys.QUERY);
@@ -21,9 +22,17 @@ export const GET = async (req: MedusaRequest, res: MedusaResponse) => {
     entity: "quotes",
     ...req.queryConfig,
   });
+  const orderModuleService = req.scope.resolve(Modules.ORDER);
+  const quoteData: any = [];
+  await Promise.all(
+    quotes.map(async (e) => {
+      const payment_status = getLastPaymentStatus(e.draft_order);
+      quoteData.push({ ...e, payment_status });
+    })
+  );
 
   res.json({
-    quotes,
+    quotes: quoteData,
     count: metadata!.count,
     offset: metadata!.skip,
     limit: metadata!.take,
