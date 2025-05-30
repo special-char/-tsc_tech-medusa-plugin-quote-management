@@ -8,6 +8,7 @@ import {
   OrderDTO,
   ShippingOptionDTO,
 } from "@medusajs/framework/types";
+import { listShippingOptionsForCartWithPricingWorkflow } from "@medusajs/medusa/core-flows";
 export async function POST(
   req: MedusaRequest<{ shipping_option_id: string; cart_id: string }>,
   res: MedusaResponse
@@ -55,19 +56,32 @@ export async function POST(
       },
     });
 
-    const pricingModuleService = req.scope.resolve(Modules.PRICING);
-    const price = await pricingModuleService.calculatePrices(
-      { id: [shippingOptions?.[0]?.price_set_link?.price_set_id!] },
-      {
-        context: {
-          region_id: order[0].region_id!,
-          currency_code: order[0].currency_code,
+    // const pricingModuleService = req.scope.resolve(Modules.PRICING);
+    // const price = await pricingModuleService.calculatePrices(
+    //   { id: [shippingOptions?.[0]?.price_set_link?.price_set_id!] },
+    //   {
+    //     context: {
+    //       region_id: order[0].region_id!,
+    //       currency_code: order[0].currency_code,
+    //     },
+    //   }
+    // );
+
+    const { result: shippingOptionPrice } =
+      await listShippingOptionsForCartWithPricingWorkflow(req.scope).run({
+        input: {
+          cart_id: cart_id,
+          options: [
+            {
+              id: shipping_option_id,
+            },
+          ],
         },
-      }
-    );
+      });
+
     const calculatedShippingOptions = {
       ...shippingOptions[0],
-      calculated_price: price[0],
+      calculated_price: shippingOptionPrice[0]?.calculated_price,
     };
 
     const { data: orderChange } = await query.graph({

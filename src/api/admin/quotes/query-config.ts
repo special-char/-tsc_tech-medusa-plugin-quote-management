@@ -34,6 +34,7 @@ export const quoteFields = [
   "draft_order.original_shipping_subtotal",
   "draft_order.original_shipping_total",
   "draft_order.created_at",
+  "draft_order.payment_collections.*",
   "draft_order.payment_collections.payments.*",
   "draft_order.updated_at",
   "*draft_order.items",
