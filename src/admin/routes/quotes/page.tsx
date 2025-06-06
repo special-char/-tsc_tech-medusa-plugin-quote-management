@@ -91,8 +91,6 @@ const Quotes = () => {
       onPaginationChange: setPagination,
     },
     onRowClick(event, row) {
-      console.log("row", row);
-
       navigate(`/quotes/detail`, {
         state: { id: row.id },
       });

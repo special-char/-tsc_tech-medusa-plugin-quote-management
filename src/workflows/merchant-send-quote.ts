@@ -13,6 +13,7 @@ import { OrderStatus, OrderWorkflowEvents } from "@medusajs/framework/utils";
 type WorkflowInput = {
   quote_id: string;
   customer_id?: string;
+  created_by?: string;
 };
 
 export const merchantSendQuoteWorkflow = createWorkflow(
@@ -39,7 +40,11 @@ export const merchantSendQuoteWorkflow = createWorkflow(
     //event trigger
     emitEventStep({
       eventName: "quote.sent",
-      data: { id: quotes[0].draft_order_id, quote_id: input.quote_id },
+      data: {
+        id: quotes[0].draft_order_id,
+        quote_id: input.quote_id,
+        created_by: input.created_by,
+      },
     });
 
     updateOrderWorkflow.runAsStep({

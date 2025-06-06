@@ -17,6 +17,7 @@ export const POST = async (
     input: {
       quote_id: id,
       customer_id: req.auth_context.actor_id,
+      created_by: "by_admin",
     },
   });
 

@@ -212,7 +212,7 @@ const QuoteDetails = () => {
                   onClick={() => handleSendQuote()}
                   disabled={isSendingQuote || isRejectingQuote}
                 >
-                  Send Quote
+                  Accept Quote
                 </Button>
               )}
 
