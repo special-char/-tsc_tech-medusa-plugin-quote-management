@@ -106,6 +106,7 @@ export const POST = async (
     input: {
       customer_id: req.auth_context.actor_id,
       quote_id: createdQuote.id,
+      created_by: "by_admin",
     },
   });
   const { data: quotesData } = await query.graph({
