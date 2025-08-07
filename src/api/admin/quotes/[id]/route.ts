@@ -26,12 +26,14 @@ export const GET = async (
     },
     { throwIfKeyNotFound: true }
   );
-  if (quote.draft_order) {
-    (quote.draft_order as any).payment_status = getLastPaymentStatus(
-      quote.draft_order
+  let quoteData = { ...quote };
+
+  if (quoteData.draft_order) {
+    (quoteData.draft_order as any).payment_status = getLastPaymentStatus(
+      quoteData.draft_order
     ) as OrderDetailDTO["payment_status"];
   }
-  res.json({ quote });
+  res.json({ quote:quoteData });
 };
 export const getLastPaymentStatus = (order: any) => {
   const PaymentStatus = {
