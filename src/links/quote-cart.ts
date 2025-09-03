@@ -4,7 +4,7 @@ import CartModule from "@medusajs/medusa/cart";
 
 export default defineLink(
   {
-    ...QuoteModule.linkable.quotes,
+    linkable:QuoteModule.linkable.quotes,
     field: "cart_id",
   },
   CartModule.linkable.cart,

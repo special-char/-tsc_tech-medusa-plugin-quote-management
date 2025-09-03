@@ -4,7 +4,7 @@ import OrderModule from "@medusajs/medusa/order";
 
 export default defineLink(
   {
-    ...QuoteModule.linkable.quotes,
+    linkable:QuoteModule.linkable.quotes,
     field: "draft_order_id",
   },
   {

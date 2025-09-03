@@ -16,7 +16,7 @@ export const createQuotesStep = createStep(
     const quoteModuleService: QuoteModuleService =
       container.resolve(QUOTE_MODULE);
 
-    const quotes = await quoteModuleService.createQuotes(input);
+    const quotes = await quoteModuleService.createQuotes([{...input[0],valid_till: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)}]);
 
     return new StepResponse(
       quotes,
